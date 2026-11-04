@@ -74,6 +74,11 @@ describe("reading typography settings", () => {
     expect(preferenceCard).toContain('t("settings.editorBodyPaletteTitle")');
     expect(preferenceCard).toContain("NoteProsePaletteSwatch");
     expect(preferenceCard).toContain("NOTE_PROSE_PALETTES[paletteId].accent");
+    expect(preferenceCard).toContain('t("settings.editorBodyHeadingStyleTitle")');
+    expect(preferenceCard).toContain('t("settings.editorBodyQuoteStyleTitle")');
+    expect(preferenceCard).toContain('t("settings.editorBodyEmphasisStyleTitle")');
+    expect(preferenceCard).toContain('t("settings.editorBodyMagazineCoverTitle")');
+    expect(preferenceCard).toContain('t("settings.editorBodyMagazineCoverDescription")');
     expect(preferenceCard).toContain('t("settings.editorBodyCssTitle")');
     expect(preferenceCard.slice(preferenceCard.indexOf("editorBodyCssTitle") - 500, preferenceCard.indexOf("editorBodyCssTitle"))).toContain("lg:flex");
     expect(preferenceCard).toContain('t("settings.editorBodyCssDescription")');
@@ -103,7 +108,10 @@ describe("settings information architecture", () => {
     const shortcuts = readFileSync(new URL("./ShortcutSettingsItem.tsx", import.meta.url), "utf8");
 
     expect(preferenceCard).toContain('t("settings.groups.interface")');
+    expect(preferenceCard).toContain('t("settings.groups.readingAppearance")');
     expect(preferenceCard).toContain('t("settings.groups.reading")');
+    expect(preferenceCard).toContain('t("settings.groups.readingElements")');
+    expect(preferenceCard.indexOf("editorBodyCssTitle")).toBeLessThan(preferenceCard.indexOf("editorBodyFontTitle"));
     expect(preferenceCard).toContain('t("settings.groups.editing")');
     expect(preferenceCard).not.toContain("ShortcutSettingsItem");
     expect(settingsPane).toContain('t("settings.tabs.shortcuts")');

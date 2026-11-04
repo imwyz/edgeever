@@ -1,5 +1,7 @@
 import {
   AudioLines,
+  BookOpenText,
+  PenLine,
   ChevronLeft,
   ChevronRight,
   Database,
@@ -15,7 +17,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { useSyncExternalStore, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { isDesktopViewport } from "@/lib/workspace-shell";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
@@ -37,6 +39,7 @@ import type { NoteImportController } from "@/lib/note-import/controller";
 import { FeedbackLink } from "./settings/FeedbackLink";
 import { SystemInfoPanel } from "./settings/SystemInfoPanel";
 import { McpConfigCard } from "./settings/McpConfigCard";
+import { AiSpaceShortcutSettingsItem } from "./settings/AiSpaceShortcutSettingsItem";
 import { PreferenceCard } from "./settings/PreferenceCard";
 import { ShortcutSettingsItem } from "./settings/ShortcutSettingsItem";
 import { PasswordCard } from "./settings/PasswordCard";
@@ -86,7 +89,7 @@ const SettingsGroup = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-type TabKey = "general" | "shortcuts" | "users" | "data" | "ai" | "mcp" | "speech" | "sharing" | "advanced" | "account" | "system";
+type TabKey = "general" | "reading" | "editing" | "shortcuts" | "users" | "data" | "ai" | "mcp" | "speech" | "sharing" | "advanced" | "account" | "system";
 
 interface TabItem {
   key: TabKey;
@@ -122,12 +125,23 @@ export const SettingsPane = ({
   const selectTab = (tab: TabKey | null) => setSearchParams(tab ? { tab } : {}, { replace: true });
   const { unseen: deployedUpdateUnseen } = useDeployedUpdateNotice();
   const canClearLocalData = Boolean(window.edgeeverDesktop?.canClearLocalData);
+  const [devShowWebExport, setDevShowWebExport] = useState(false);
 
   const tabItems: TabItem[] = [
     {
       key: "general",
       label: t("settings.tabs.general"),
       icon: SlidersHorizontal,
+    },
+    {
+      key: "reading",
+      label: t("settings.tabs.reading"),
+      icon: BookOpenText,
+    },
+    {
+      key: "editing",
+      label: t("settings.tabs.editing"),
+      icon: PenLine,
     },
     {
       key: "shortcuts",
@@ -225,25 +239,33 @@ export const SettingsPane = ({
     if (key === "data" && desktopLayout !== desktopViewport) return null;
     switch (key) {
       case "general":
+      case "reading":
+      case "editing":
         return (
           <div className="grid gap-6">
             <PreferenceCard
+              section={key}
               imageCompressionEnabled={imageCompressionEnabled}
               onImageCompressionChange={onImageCompressionChange}
               noteProse={noteProse}
               onNoteProseChange={onNoteProseChange}
             />
-            <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-card lg:block">
-              <FeedbackLink />
-            </div>
+            {key === "general" ? (
+              <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-card lg:block">
+                <FeedbackLink />
+              </div>
+            ) : null}
           </div>
         );
       case "shortcuts":
         return (
-          <ShortcutSettingsItem
-            shortcutSettings={shortcutSettings}
-            onShortcutSettingsChange={onShortcutSettingsChange}
-          />
+          <div className="grid gap-6">
+            <AiSpaceShortcutSettingsItem />
+            <ShortcutSettingsItem
+              shortcutSettings={shortcutSettings}
+              onShortcutSettingsChange={onShortcutSettingsChange}
+            />
+          </div>
         );
       case "users":
         return isOwner ? (
@@ -254,7 +276,23 @@ export const SettingsPane = ({
       case "data":
         return (
           <SettingsGroup>
-            {window.edgeeverDesktop?.backup ? <DesktopScheduledBackupCard /> : <DataExportCard refreshWorkspaceAfterImport={refreshWorkspaceAfterImport} />}
+            {import.meta.env.DEV && (
+              <div className="flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300">
+                <span>Dev 预览模式：{devShowWebExport ? "当前为 Web 端原生导出卡片" : "当前为桌面端备份与恢复预览"}</span>
+                <button
+                  type="button"
+                  className="font-medium underline hover:text-amber-900 dark:hover:text-amber-100"
+                  onClick={() => setDevShowWebExport((prev) => !prev)}
+                >
+                  {devShowWebExport ? "切换到桌面端预览" : "切换到 Web 原生导出"}
+                </button>
+              </div>
+            )}
+            {window.edgeeverDesktop?.backup || (import.meta.env.DEV && !devShowWebExport) ? (
+              <DesktopScheduledBackupCard />
+            ) : (
+              <DataExportCard refreshWorkspaceAfterImport={refreshWorkspaceAfterImport} />
+            )}
             <ThirdPartyImportCard controller={noteImport} onOpenMemo={onOpenMemo} />
           </SettingsGroup>
         );
